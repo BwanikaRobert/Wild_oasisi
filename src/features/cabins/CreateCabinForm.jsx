@@ -24,14 +24,21 @@ function CreateCabinForm({ cabinToEdit = {}, close }) {
   function onSubmit(data) {
     console.log(data.image);
     if (isEditSession) {
-      editCabin({ newCabinData: { ...data, image: data.image }, Id: editId });
+      editCabin(
+        { newCabinData: { ...data, image: data.image }, Id: editId },
+        {
+          onSuccess: () => {
+            close();
+          },
+        }
+      );
     } else {
       createCabin(
         { ...data, image: data.image },
         {
           onSuccess: () => {
-            close();
             reset();
+            close();
           },
         }
       );

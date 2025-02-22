@@ -4,7 +4,7 @@ import { createEditCabin } from "../../services/apiCabins";
 
 export function useCreateCabin() {
   const queryClient = useQueryClient();
-  // Create cabin
+
   const { mutate: createCabin, isLoading: isCreating } = useMutation({
     mutationFn: createEditCabin,
     onSuccess: () => {

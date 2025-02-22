@@ -18,7 +18,6 @@ export async function deleteCabin(id) {
 
 export async function createEditCabin(newCabin, Id) {
   const isPathString = typeof newCabin.image === "string";
-  console.log(newCabin.image[0].name);
   const imgName = isPathString
     ? ""
     : `${Math.random()}-${newCabin.image[0].name.replaceAll("/", "")}`;
