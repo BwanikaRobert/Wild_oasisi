@@ -1,7 +1,8 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { HiEllipsisVertical } from "react-icons/hi2";
 import styled from "styled-components";
+import { useScroll } from "../hooks/scrollApi";
 
 const Menu = styled.div`
   display: flex;
@@ -69,34 +70,69 @@ function Menus({ children }) {
   const [openMenu, setOpenMenu] = useState("");
   const close = () => setOpenMenu("");
   const open = setOpenMenu;
-  const [position, setPosition] = useState(null);
+
+  const elRef = useRef();
+  const { dispatch, element } = useScroll();
+
+  useEffect(() => {
+    function handleScroll() {
+      const rect = element.getBoundingClientRect();
+
+      dispatch({
+        type: "scroll",
+        payload: {
+          x: window.innerWidth - rect.width - rect.x,
+          y: rect.y + rect.height + 8,
+        },
+      });
+    }
+    document.querySelector("main").addEventListener("scroll", handleScroll);
+    return () =>
+      document
+        .querySelector("main")
+        .removeEventListener("scroll", handleScroll);
+  }, [dispatch, element]);
+
   return (
-    <MenusContext.Provider
-      value={{ open, close, openMenu, setPosition, position }}
-    >
+    <MenusContext.Provider value={{ open, close, openMenu, dispatch, elRef }}>
       {children}
     </MenusContext.Provider>
   );
 }
 function Toggle({ id }) {
-  const { open, close, openMenu, setPosition } = useContext(MenusContext);
+  const { open, close, openMenu, dispatch, elRef } = useContext(MenusContext);
+
   function handleToggle(e) {
     const rect = e.target.closest("button").getBoundingClientRect();
-    setPosition({
-      x: window.innerWidth - rect.width - rect.x,
-      y: rect.y + rect.height + 8,
+
+    // set elemet id in the dom
+    const newId =
+      Array.from(e.target.closest("button").classList).at(0) + `${id}`;
+    e.target.closest("button").id = newId;
+
+    dispatch({
+      type: "change",
+      payload: {
+        pos: {
+          x: window.innerWidth - rect.width - rect.x,
+          y: rect.y + rect.height + 8,
+        },
+        el: document.getElementById(newId),
+      },
     });
 
     openMenu === "" || openMenu !== id ? open(id) : close();
   }
+
   return (
-    <StyledToggle>
-      <HiEllipsisVertical onClick={(e) => handleToggle(e)} />
+    <StyledToggle ref={elRef} onClick={(e) => handleToggle(e)}>
+      <HiEllipsisVertical />
     </StyledToggle>
   );
 }
 function List({ children, id }) {
-  const { openMenu, position } = useContext(MenusContext);
+  const { openMenu } = useContext(MenusContext);
+  const { position } = useScroll();
 
   if (id !== openMenu) return null;
   return createPortal(
